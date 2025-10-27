@@ -58,6 +58,7 @@ const logger = createLogger('ToolInput')
 interface ToolInputProps {
   blockId: string
   subBlockId: string
+  isConnecting: boolean
   isPreview?: boolean
   previewValue?: any
   disabled?: boolean
@@ -280,6 +281,7 @@ function CodeSyncWrapper({
   onChange,
   uiComponent,
   disabled,
+  isConnecting,
 }: {
   blockId: string
   paramId: string
@@ -287,13 +289,14 @@ function CodeSyncWrapper({
   onChange: (value: string) => void
   uiComponent: any
   disabled: boolean
+  isConnecting: boolean
 }) {
   return (
     <GenericSyncWrapper blockId={blockId} paramId={paramId} value={value} onChange={onChange}>
       <Code
         blockId={blockId}
         subBlockId={paramId}
-        isConnecting={false}
+        isConnecting={isConnecting}
         language={uiComponent.language}
         generationType={uiComponent.generationType}
         disabled={disabled}
@@ -313,6 +316,7 @@ function ComboboxSyncWrapper({
   onChange,
   uiComponent,
   disabled,
+  isConnecting,
 }: {
   blockId: string
   paramId: string
@@ -320,6 +324,7 @@ function ComboboxSyncWrapper({
   onChange: (value: string) => void
   uiComponent: any
   disabled: boolean
+  isConnecting: boolean
 }) {
   return (
     <GenericSyncWrapper blockId={blockId} paramId={paramId} value={value} onChange={onChange}>
@@ -328,7 +333,7 @@ function ComboboxSyncWrapper({
         subBlockId={paramId}
         options={uiComponent.options || []}
         placeholder={uiComponent.placeholder}
-        isConnecting={false}
+        isConnecting={isConnecting}
         config={{
           id: paramId,
           type: 'combobox' as const,
@@ -414,6 +419,7 @@ function ChannelSelectorSyncWrapper({
 export function ToolInput({
   blockId,
   subBlockId,
+  isConnecting,
   isPreview = false,
   previewValue,
   disabled = false,
@@ -968,21 +974,25 @@ export function ToolInput({
     toolIndex?: number,
     currentToolParams?: Record<string, string>
   ) => {
-    // Create unique blockId for tool parameters to avoid conflicts with main block
-    const uniqueBlockId = toolIndex !== undefined ? `${blockId}-tool-${toolIndex}` : blockId
+    // Create unique subBlockId for tool parameters to avoid conflicts
+    // Use real blockId so tag dropdown and drag-drop work correctly
+    const uniqueSubBlockId =
+      toolIndex !== undefined
+        ? `${subBlockId}-tool-${toolIndex}-${param.id}`
+        : `${subBlockId}-${param.id}`
     const uiComponent = param.uiComponent
 
     // If no UI component info, fall back to basic input
     if (!uiComponent) {
       return (
         <ShortInput
-          blockId={uniqueBlockId}
-          subBlockId={`${subBlockId}-param`}
+          blockId={blockId}
+          subBlockId={uniqueSubBlockId}
           placeholder={param.description}
           password={isPasswordParameter(param.id)}
-          isConnecting={false}
+          isConnecting={isConnecting}
           config={{
-            id: `${subBlockId}-param`,
+            id: uniqueSubBlockId,
             type: 'short-input',
             title: param.id,
           }}
@@ -1024,12 +1034,12 @@ export function ToolInput({
       case 'long-input':
         return (
           <LongInput
-            blockId={uniqueBlockId}
-            subBlockId={`${subBlockId}-param`}
+            blockId={blockId}
+            subBlockId={uniqueSubBlockId}
             placeholder={uiComponent.placeholder || param.description}
-            isConnecting={false}
+            isConnecting={isConnecting}
             config={{
-              id: `${subBlockId}-param`,
+              id: uniqueSubBlockId,
               type: 'long-input',
               title: param.id,
             }}
@@ -1041,13 +1051,13 @@ export function ToolInput({
       case 'short-input':
         return (
           <ShortInput
-            blockId={uniqueBlockId}
-            subBlockId={`${subBlockId}-param`}
+            blockId={blockId}
+            subBlockId={uniqueSubBlockId}
             placeholder={uiComponent.placeholder || param.description}
             password={uiComponent.password || isPasswordParameter(param.id)}
-            isConnecting={false}
+            isConnecting={isConnecting}
             config={{
-              id: `${subBlockId}-param`,
+              id: uniqueSubBlockId,
               type: 'short-input',
               title: param.id,
             }}
@@ -1134,14 +1144,15 @@ export function ToolInput({
             onChange={onChange}
             uiComponent={uiComponent}
             disabled={disabled}
+            isConnecting={isConnecting}
           />
         )
 
       case 'slider':
         return (
           <SliderInputSyncWrapper
-            blockId={uniqueBlockId}
-            paramId={param.id}
+            blockId={blockId}
+            paramId={uniqueSubBlockId}
             value={value}
             onChange={onChange}
             uiComponent={uiComponent}
@@ -1158,6 +1169,7 @@ export function ToolInput({
             onChange={onChange}
             uiComponent={uiComponent}
             disabled={disabled}
+            isConnecting={isConnecting}
           />
         )
 
@@ -1201,12 +1213,12 @@ export function ToolInput({
         return (
           <ShortInput
             blockId={blockId}
-            subBlockId={`${subBlockId}-param`}
+            subBlockId={uniqueSubBlockId}
             placeholder={uiComponent.placeholder || param.description}
             password={uiComponent.password || isPasswordParameter(param.id)}
-            isConnecting={false}
+            isConnecting={isConnecting}
             config={{
-              id: `${subBlockId}-param`,
+              id: uniqueSubBlockId,
               type: 'short-input',
               title: param.id,
             }}
@@ -1410,15 +1422,17 @@ export function ToolInput({
                 : []
 
             // For MCP tools, extract parameters from input schema
+            // Use cached schema from tool object if available, otherwise fetch from mcpTools
             const mcpTool = isMcpTool ? mcpTools.find((t) => t.id === tool.toolId) : null
+            const mcpToolSchema = isMcpTool ? tool.schema || mcpTool?.inputSchema : null
             const mcpToolParams =
-              isMcpTool && mcpTool?.inputSchema?.properties
-                ? Object.entries(mcpTool.inputSchema.properties || {}).map(
+              isMcpTool && mcpToolSchema?.properties
+                ? Object.entries(mcpToolSchema.properties || {}).map(
                     ([paramId, param]: [string, any]) => ({
                       id: paramId,
                       type: param.type || 'string',
                       description: param.description || '',
-                      visibility: (mcpTool.inputSchema.required?.includes(paramId)
+                      visibility: (mcpToolSchema.required?.includes(paramId)
                         ? 'user-or-llm'
                         : 'user-only') as 'user-or-llm' | 'user-only' | 'llm-only' | 'hidden',
                     })
@@ -1740,13 +1754,13 @@ export function ToolInput({
                                   )
                                 ) : (
                                   <ShortInput
-                                    blockId={`${blockId}-tool-${toolIndex}`}
-                                    subBlockId={`${subBlockId}-param`}
+                                    blockId={blockId}
+                                    subBlockId={`${subBlockId}-tool-${toolIndex}-${param.id}`}
                                     placeholder={param.description}
                                     password={isPasswordParameter(param.id)}
-                                    isConnecting={false}
+                                    isConnecting={isConnecting}
                                     config={{
-                                      id: `${subBlockId}-param`,
+                                      id: `${subBlockId}-tool-${toolIndex}-${param.id}`,
                                       type: 'short-input',
                                       title: param.id,
                                     }}

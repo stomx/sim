@@ -230,6 +230,7 @@ export const SubBlock = memo(
             <ToolInput
               blockId={blockId}
               subBlockId={config.id}
+              isConnecting={isConnecting}
               isPreview={isPreview}
               previewValue={previewValue}
               disabled={allowExpandInPreview ? false : isDisabled}
@@ -522,6 +523,7 @@ export const SubBlock = memo(
               disabled={isDisabled}
               isPreview={isPreview}
               previewValue={previewValue}
+              isConnecting={isConnecting}
             />
           )
         default:
