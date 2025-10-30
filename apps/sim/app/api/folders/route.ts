@@ -8,6 +8,9 @@ import { getUserEntityPermissions } from '@/lib/permissions/utils'
 
 const logger = createLogger('FoldersAPI')
 
+// Cache folders for 60 seconds to reduce database load
+export const revalidate = 60
+
 // GET - Fetch folders for a workspace
 export async function GET(request: NextRequest) {
   try {

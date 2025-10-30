@@ -11,6 +11,9 @@ import { verifyWorkspaceMembership } from './utils'
 
 const logger = createLogger('WorkflowAPI')
 
+// Cache workflows list for 60 seconds to reduce database load
+export const revalidate = 60
+
 const CreateWorkflowSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional().default(''),

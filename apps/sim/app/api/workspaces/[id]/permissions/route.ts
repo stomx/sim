@@ -9,6 +9,9 @@ import { getUsersWithPermissions, hasWorkspaceAdminAccess } from '@/lib/permissi
 
 const logger = createLogger('WorkspacesPermissionsAPI')
 
+// Cache permissions for 60 seconds to reduce database load
+export const revalidate = 60
+
 type PermissionType = (typeof permissionTypeEnum.enumValues)[number]
 
 interface UpdatePermissionsRequest {
