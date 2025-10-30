@@ -1,3 +1,5 @@
+'use client'
+
 import { useContext } from 'react'
 import { ssoClient } from '@better-auth/sso/client'
 import { stripeClient } from '@better-auth/stripe/client'
