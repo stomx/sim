@@ -1,11 +1,16 @@
 import { db } from '@sim/db'
 import { permissions, type permissionTypeEnum, user, workspace } from '@sim/db/schema'
 import { and, eq } from 'drizzle-orm'
+import { getRedisClient } from '@/lib/redis'
+import { createLogger } from '@/lib/logs/console/logger'
+
+const logger = createLogger('PermissionsUtils')
 
 export type PermissionType = (typeof permissionTypeEnum.enumValues)[number]
 
 /**
  * Get the highest permission level a user has for a specific entity
+ * Uses Redis caching with 60 second TTL to reduce database load
  *
  * @param userId - The ID of the user to check permissions for
  * @param entityType - The type of entity (e.g., 'workspace', 'workflow', etc.)
@@ -17,6 +22,24 @@ export async function getUserEntityPermissions(
   entityType: string,
   entityId: string
 ): Promise<PermissionType | null> {
+  const cacheKey = `perm:${userId}:${entityType}:${entityId}`
+
+  try {
+    // Try to get from Redis cache first
+    const redis = getRedisClient()
+    if (redis) {
+      const cached = await redis.get(cacheKey)
+      if (cached !== null) {
+        logger.debug('Permission cache hit', { userId, entityType, entityId })
+        return cached === 'null' ? null : (cached as PermissionType)
+      }
+    }
+  } catch (error) {
+    // If Redis fails, continue with database query
+    logger.warn('Redis cache read failed, falling back to database', { error })
+  }
+
+  // Query database
   const result = await db
     .select({ permissionType: permissions.permissionType })
     .from(permissions)
@@ -28,18 +51,32 @@ export async function getUserEntityPermissions(
       )
     )
 
-  if (result.length === 0) {
-    return null
+  let permission: PermissionType | null = null
+
+  if (result.length > 0) {
+    const permissionOrder: Record<PermissionType, number> = { admin: 3, write: 2, read: 1 }
+    const highestPermission = result.reduce((highest, current) => {
+      return permissionOrder[current.permissionType] > permissionOrder[highest.permissionType]
+        ? current
+        : highest
+    })
+    permission = highestPermission.permissionType
   }
 
-  const permissionOrder: Record<PermissionType, number> = { admin: 3, write: 2, read: 1 }
-  const highestPermission = result.reduce((highest, current) => {
-    return permissionOrder[current.permissionType] > permissionOrder[highest.permissionType]
-      ? current
-      : highest
-  })
+  // Cache the result for 60 seconds
+  try {
+    const redis = getRedisClient()
+    if (redis) {
+      const cacheValue = permission === null ? 'null' : permission
+      await redis.setex(cacheKey, 60, cacheValue)
+      logger.debug('Permission cached', { userId, entityType, entityId, permission })
+    }
+  } catch (error) {
+    // If Redis fails, log but don't fail the request
+    logger.warn('Redis cache write failed', { error })
+  }
 
-  return highestPermission.permissionType
+  return permission
 }
 
 /**
