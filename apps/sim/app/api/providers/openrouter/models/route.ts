@@ -6,6 +6,9 @@ const logger = createLogger('OpenRouterModelsAPI')
 
 export const dynamic = 'force-dynamic'
 
+// Cache for 1 hour to avoid repeated external API calls (models don't change frequently)
+export const revalidate = 3600
+
 interface OpenRouterModel {
   id: string
 }
@@ -16,10 +19,18 @@ interface OpenRouterResponse {
 
 export async function GET(_request: NextRequest) {
   try {
+    // Add timeout to prevent hanging indefinitely
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+
     const response = await fetch('https://openrouter.ai/api/v1/models', {
       headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
+      signal: controller.signal,
+      // Cache for 1 hour (models don't change frequently)
+      next: { revalidate: 3600 },
     })
+
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       logger.warn('Failed to fetch OpenRouter models', {
@@ -40,9 +51,15 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json({ models })
   } catch (error) {
-    logger.error('Error fetching OpenRouter models', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    })
+    // Handle timeout and other errors gracefully
+    if (error instanceof Error && error.name === 'AbortError') {
+      logger.warn('OpenRouter API request timed out after 5 seconds')
+    } else {
+      logger.error('Error fetching OpenRouter models', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+    // Return empty array to avoid breaking the UI
     return NextResponse.json({ models: [] })
   }
 }
