@@ -123,11 +123,23 @@ export const useProvidersStore = create<ProvidersStore>((set, get) => ({
   },
 }))
 
+// Fetch all provider models in parallel on client initialization
 if (typeof window !== 'undefined') {
   setTimeout(() => {
     const store = useProvidersStore.getState()
-    store.fetchModels('base')
-    store.fetchModels('ollama')
-    store.fetchModels('openrouter')
+    // Use Promise.allSettled to fetch all providers in parallel
+    // This prevents slow providers from blocking others
+    Promise.allSettled([
+      store.fetchModels('base'),
+      store.fetchModels('ollama'),
+      store.fetchModels('openrouter'),
+    ]).then((results) => {
+      results.forEach((result, index) => {
+        const providerName = ['base', 'ollama', 'openrouter'][index] as ProviderName
+        if (result.status === 'rejected') {
+          logger.warn(`Failed to load ${providerName} models`, { error: result.reason })
+        }
+      })
+    })
   }, 1000)
 }
