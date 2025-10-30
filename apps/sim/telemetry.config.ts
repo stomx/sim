@@ -51,13 +51,13 @@ const config = {
    * - maxQueueSize: Max number of spans to buffer (increased from 100 to 2048)
    * - maxExportBatchSize: Max number of spans per batch (increased from 10 to 512)
    * - scheduledDelayMillis: Delay between batches (5 seconds)
-   * - exportTimeoutMillis: Timeout for exporting data (30 seconds)
+   * - exportTimeoutMillis: Timeout for exporting data (reduced to 2 seconds to prevent blocking)
    */
   batchSettings: {
     maxQueueSize: 2048,
     maxExportBatchSize: 512,
     scheduledDelayMillis: 5000,
-    exportTimeoutMillis: 30000,
+    exportTimeoutMillis: 2000, // Reduced from 30s to 2s to prevent blocking
   },
 
   /**
@@ -109,9 +109,11 @@ const config = {
    * - OpenTelemetry SDK with BatchSpanProcessor
    * - Intelligent sampling (errors and AI ops always captured)
    * - Semantic conventions for AI/LLM operations
+   *
+   * Disabled by default in development to avoid timeout errors
    */
   serverSide: {
-    enabled: true,
+    enabled: env.NODE_ENV === 'production',
   },
 }
 

@@ -332,6 +332,11 @@ export function createOTelSpansForWorkflowExecution(params: {
   error?: string
 }): void {
   try {
+    // Skip telemetry in development mode
+    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
+      return
+    }
+    
     const tracer = getTracer()
 
     const rootSpan = tracer.startSpan(
@@ -435,6 +440,11 @@ export function trackPlatformEvent(
   attributes: Record<string, string | number | boolean>
 ): void {
   try {
+    // Skip telemetry in development mode
+    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
+      return
+    }
+    
     const tracer = getTracer()
     const span = tracer.startSpan(eventName, {
       attributes: {

@@ -19,7 +19,7 @@ const DEFAULT_TELEMETRY_CONFIG = {
     maxQueueSize: 2048,
     maxExportBatchSize: 512,
     scheduledDelayMillis: 5000,
-    exportTimeoutMillis: 30000,
+    exportTimeoutMillis: 2000, // Reduced from 30s to 2s to prevent blocking
   },
 }
 
@@ -28,8 +28,9 @@ const DEFAULT_TELEMETRY_CONFIG = {
  */
 async function initializeOpenTelemetry() {
   try {
-    if (env.NEXT_TELEMETRY_DISABLED === '1') {
-      logger.info('OpenTelemetry disabled via NEXT_TELEMETRY_DISABLED=1')
+    // Disable telemetry in development by default to avoid timeout errors
+    if (env.NEXT_TELEMETRY_DISABLED === '1' || env.NODE_ENV === 'development') {
+      logger.info('OpenTelemetry disabled (development mode or NEXT_TELEMETRY_DISABLED=1)')
       return
     }
 
@@ -60,6 +61,10 @@ async function initializeOpenTelemetry() {
       url: telemetryConfig.endpoint,
       headers: {},
       timeoutMillis: telemetryConfig.batchSettings.exportTimeoutMillis,
+      // Ensure errors don't crash the app
+      onExportError: (error) => {
+        logger.warn('Telemetry export failed (non-blocking)', { error: error?.message })
+      },
     })
 
     const spanProcessor = new BatchSpanProcessor(exporter, {
