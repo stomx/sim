@@ -76,9 +76,19 @@ const nextConfig: NextConfig = {
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json'],
   },
   serverExternalPackages: ['pdf-parse'],
+  // Disable source maps in production for smaller bundles
+  productionBrowserSourceMaps: false,
+  // Compiler optimizations
+  compiler: {
+    removeConsole: !isDev && {
+      exclude: ['error', 'warn'],
+    },
+  },
   experimental: {
     optimizeCss: true,
     turbopackSourceMaps: false,
+    // Enable webpack build worker for faster builds
+    webpackBuildWorker: true,
   },
   ...(isDev && {
     allowedDevOrigins: [
