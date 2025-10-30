@@ -477,7 +477,7 @@ export const useKnowledgeStore = create<KnowledgeStore>((set, get) => ({
     const abortController = new AbortController()
     const timeoutId = setTimeout(() => {
       abortController.abort()
-    }, 10000) // 10 second timeout
+    }, 30000) // 30 second timeout (increased from 10s to prevent premature aborts)
 
     try {
       set({ loadingKnowledgeBasesList: true })
@@ -519,21 +519,23 @@ export const useKnowledgeStore = create<KnowledgeStore>((set, get) => ({
       // Clear the timeout in case of error
       clearTimeout(timeoutId)
 
-      logger.error('Error fetching knowledge bases list:', error)
-
       // Always set loading to false, even on error
       set({
         loadingKnowledgeBasesList: false,
         knowledgeBasesListLoaded: true, // Mark as loaded even on error to prevent infinite retries
       })
 
-      // Don't throw on AbortError (timeout or cancellation)
+      // Handle abort errors (timeout) gracefully - don't throw
       if (error instanceof Error && error.name === 'AbortError') {
-        logger.warn('Knowledge bases list request was aborted (timeout or cancellation)')
+        logger.warn('Knowledge bases list request timed out after 30s', {
+          workspaceId,
+        })
         return state.knowledgeBasesList // Return whatever we have cached
       }
 
-      throw error
+      // Log other errors but don't throw - return empty array instead
+      logger.error('Error fetching knowledge bases list:', error)
+      return []
     }
   },
 
