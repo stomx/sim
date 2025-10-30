@@ -12,8 +12,9 @@ if (!connectionString) {
 const postgresClient = postgres(connectionString, {
   prepare: false,
   idle_timeout: 20,
-  connect_timeout: 30,
+  connect_timeout: 60, // Increased from 30 to handle slow network/remote DB
   max: 30,
+  max_lifetime: 60 * 30, // 30 minutes - close connections that are open too long
   onnotice: () => {},
 })
 
