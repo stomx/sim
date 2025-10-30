@@ -10,6 +10,9 @@ import type { EnvironmentVariable } from '@/stores/settings/environment/types'
 
 const logger = createLogger('EnvironmentAPI')
 
+// Increase timeout for encryption/decryption operations
+export const maxDuration = 30
+
 const EnvVarSchema = z.object({
   variables: z.record(z.string()),
 })

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getBaseModelProviders } from '@/providers/utils'
 
+// Base models are static, cache for 1 hour
+export const revalidate = 3600
+
 export async function GET() {
   try {
     const allModels = Object.keys(getBaseModelProviders())

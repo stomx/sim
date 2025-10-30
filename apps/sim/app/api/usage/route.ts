@@ -9,6 +9,9 @@ import { createLogger } from '@/lib/logs/console/logger'
 
 const logger = createLogger('UnifiedUsageAPI')
 
+// Cache usage data for 15 seconds to reduce database load on repeated requests
+export const revalidate = 15
+
 /**
  * Unified Usage Endpoint
  * GET/PUT /api/usage?context=user|organization&userId=<id>&organizationId=<id>

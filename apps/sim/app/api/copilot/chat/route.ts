@@ -22,6 +22,9 @@ import { createFileContent } from '@/lib/uploads/utils/file-utils'
 
 const logger = createLogger('CopilotChatAPI')
 
+// Increase max duration for copilot operations (can be slow with large contexts)
+export const maxDuration = 60
+
 const SIM_AGENT_API_URL = env.SIM_AGENT_API_URL || SIM_AGENT_API_URL_DEFAULT
 
 const FileAttachmentSchema = z.object({
