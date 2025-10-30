@@ -7,6 +7,9 @@ import { createLogger } from '@/lib/logs/console/logger'
 
 const logger = createLogger('Workspaces')
 
+// Cache workspaces for 30 seconds to reduce database load
+export const revalidate = 30
+
 // Get all workspaces for the current user
 export async function GET() {
   const session = await getSession()
