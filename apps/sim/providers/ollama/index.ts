@@ -75,6 +75,16 @@ export const ollamaProvider: ProviderConfig = {
       return
     }
 
+    // Check if Ollama is enabled via environment variable
+    if (typeof process !== 'undefined' && process.env) {
+      const { env } = await import('@/lib/env')
+      if (!env.OLLAMA_ENABLED) {
+        logger.info('Ollama provider disabled via OLLAMA_ENABLED environment variable')
+        useProvidersStore.getState().setModels('ollama', [])
+        return
+      }
+    }
+
     try {
       const response = await fetch(`${OLLAMA_HOST}/api/tags`)
       if (!response.ok) {

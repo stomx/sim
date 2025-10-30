@@ -8,7 +8,8 @@ import { z } from 'zod'
  * - Server-side: Falls back to process.env when runtimeEnv returns undefined
  * - Provides seamless Docker runtime variable support for NEXT_PUBLIC_ vars
  */
-const getEnv = (variable: string) => runtimeEnv(variable) ?? process.env[variable]
+const getEnv = (variable: string) =>
+  runtimeEnv(variable) ?? (typeof process !== 'undefined' ? process.env[variable] : undefined)
 
 // biome-ignore format: keep alignment for readability
 export const env = createEnv({
@@ -77,6 +78,7 @@ export const env = createEnv({
     ANTHROPIC_API_KEY_2:                   z.string().min(1).optional(),           // Additional Anthropic API key for load balancing
     ANTHROPIC_API_KEY_3:                   z.string().min(1).optional(),           // Additional Anthropic API key for load balancing
     OLLAMA_URL:                            z.string().url().optional(),            // Ollama local LLM server URL
+    OLLAMA_ENABLED:                        z.boolean().optional().default(false),  // Enable Ollama provider (defaults to false)
     ELEVENLABS_API_KEY:                    z.string().min(1).optional(),           // ElevenLabs API key for text-to-speech in deployed chat
     SERPER_API_KEY:                        z.string().min(1).optional(),           // Serper API key for online search
     EXA_API_KEY:                           z.string().min(1).optional(),           // Exa AI API key for enhanced online search
