@@ -2,6 +2,7 @@ import type React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { PlusIcon, Server, WrenchIcon, XIcon } from 'lucide-react'
 import { useParams } from 'next/navigation'
+import { useShallow } from 'zustand/react/shallow'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -436,7 +437,9 @@ export function ToolInput({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const isWide = useWorkflowStore((state) => state.blocks[blockId]?.isWide)
-  const customTools = useCustomToolsStore((state) => state.getAllTools())
+  const customTools = useCustomToolsStore(
+    useShallow((state) => state.getAllTools())
+  )
   const subBlockStore = useSubBlockStore()
 
   // MCP tools integration
