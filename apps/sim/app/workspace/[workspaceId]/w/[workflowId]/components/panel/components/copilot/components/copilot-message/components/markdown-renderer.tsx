@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Check, Copy } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 const getTextContent = (element: React.ReactNode): string => {
   if (typeof element === 'string') {
@@ -94,21 +93,15 @@ if (typeof document !== 'undefined') {
 // Link component with preview
 function LinkWithPreview({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Tooltip delayDuration={300}>
-      <TooltipTrigger asChild>
-        <a
-          href={href}
-          className='inline break-all text-blue-600 hover:underline dark:text-blue-400'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          {children}
-        </a>
-      </TooltipTrigger>
-      <TooltipContent side='top' align='center' sideOffset={5} className='max-w-sm p-3'>
-        <span className='text-sm'>{href}</span>
-      </TooltipContent>
-    </Tooltip>
+    <a
+      href={href}
+      className='inline break-all text-blue-600 hover:underline dark:text-blue-400'
+      target='_blank'
+      rel='noopener noreferrer'
+      title={href}
+    >
+      {children}
+    </a>
   )
 }
 
