@@ -1,5 +1,6 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@/lib/utils'
 import { useEnvironmentStore } from '@/stores/settings/environment/store'
 
@@ -34,7 +35,9 @@ export const EnvVarDropdown: React.FC<EnvVarDropdownProps> = ({
   maxHeight = 'none',
 }) => {
   const loadWorkspaceEnvironment = useEnvironmentStore((state) => state.loadWorkspaceEnvironment)
-  const userEnvVars = useEnvironmentStore((state) => Object.keys(state.variables))
+  const userEnvVars = useEnvironmentStore(
+    useShallow((state) => Object.keys(state.variables))
+  )
   const [workspaceEnvData, setWorkspaceEnvData] = useState<{
     workspace: Record<string, string>
     personal: Record<string, string>
