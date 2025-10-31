@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import {
   AlertDialog,
@@ -55,13 +55,24 @@ export function DeployedWorkflowModal({
   const activeWorkflowId = useWorkflowRegistry((state) => state.activeWorkflowId)
 
   // Get current workflow state to compare with deployed state
-  const currentWorkflowState = useWorkflowStore(
+  const workflowState = useWorkflowStore(
     useShallow((state) => ({
-      blocks: activeWorkflowId ? mergeSubblockState(state.blocks, activeWorkflowId) : state.blocks,
+      blocks: state.blocks,
       edges: state.edges,
       loops: state.loops,
       parallels: state.parallels,
     }))
+  )
+
+  // Merge subblock state outside of the selector to avoid creating new objects on every render
+  const currentWorkflowState = useMemo(
+    () => ({
+      ...workflowState,
+      blocks: activeWorkflowId
+        ? mergeSubblockState(workflowState.blocks, activeWorkflowId)
+        : workflowState.blocks,
+    }),
+    [workflowState, activeWorkflowId]
   )
 
   const handleRevert = async () => {
