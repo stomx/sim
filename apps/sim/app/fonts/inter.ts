@@ -6,5 +6,6 @@ export const inter = Inter({
   variable: '--font-inter',
   // Variable font supports weights from 100-900
   weight: 'variable',
+  preload: false,
   fallback: ['system-ui', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans'],
 })
