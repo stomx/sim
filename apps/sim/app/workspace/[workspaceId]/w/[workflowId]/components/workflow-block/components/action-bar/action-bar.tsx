@@ -1,5 +1,6 @@
-import { memo, useCallback } from 'react'
+import { memo } from 'react'
 import { ArrowLeftRight, ArrowUpDown, Circle, CircleOff, Copy, LogOut, Trash2 } from 'lucide-react'
+import { useShallow } from 'zustand/react/shallow'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
@@ -24,19 +25,16 @@ export const ActionBar = memo(
 
     // Optimized: Single store subscription for all block data
     const { isEnabled, horizontalHandles, parentId, parentType } = useWorkflowStore(
-      useCallback(
-        (state) => {
-          const block = state.blocks[blockId]
-          const parentId = block?.data?.parentId
-          return {
-            isEnabled: block?.enabled ?? true,
-            horizontalHandles: block?.horizontalHandles ?? false,
-            parentId,
-            parentType: parentId ? state.blocks[parentId]?.type : undefined,
-          }
-        },
-        [blockId]
-      )
+      useShallow((state) => {
+        const block = state.blocks[blockId]
+        const parentId = block?.data?.parentId
+        return {
+          isEnabled: block?.enabled ?? true,
+          horizontalHandles: block?.horizontalHandles ?? false,
+          parentId,
+          parentType: parentId ? state.blocks[parentId]?.type : undefined,
+        }
+      })
     )
 
     const userPermissions = useUserPermissionsContext()
