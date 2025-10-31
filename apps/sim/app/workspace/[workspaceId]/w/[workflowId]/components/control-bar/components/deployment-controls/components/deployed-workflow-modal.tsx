@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,12 +55,14 @@ export function DeployedWorkflowModal({
   const activeWorkflowId = useWorkflowRegistry((state) => state.activeWorkflowId)
 
   // Get current workflow state to compare with deployed state
-  const currentWorkflowState = useWorkflowStore((state) => ({
-    blocks: activeWorkflowId ? mergeSubblockState(state.blocks, activeWorkflowId) : state.blocks,
-    edges: state.edges,
-    loops: state.loops,
-    parallels: state.parallels,
-  }))
+  const currentWorkflowState = useWorkflowStore(
+    useShallow((state) => ({
+      blocks: activeWorkflowId ? mergeSubblockState(state.blocks, activeWorkflowId) : state.blocks,
+      edges: state.edges,
+      loops: state.loops,
+      parallels: state.parallels,
+    }))
+  )
 
   const handleRevert = async () => {
     if (!activeWorkflowId) {

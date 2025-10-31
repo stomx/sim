@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import type { SubBlockConfig } from '@/blocks/types'
 import { useWorkflowRegistry } from '@/stores/workflows/registry/store'
 import { useSubBlockStore } from '@/stores/workflows/subblock/store'
@@ -23,13 +24,15 @@ export function useDependsOnGate(
   // Use only explicit dependsOn from block config. No inference.
   const dependsOn: string[] = (subBlock.dependsOn as string[] | undefined) || []
 
-  const dependencyValues = useSubBlockStore((state) => {
-    if (dependsOn.length === 0) return [] as any[]
-    if (!activeWorkflowId) return dependsOn.map(() => null)
-    const workflowValues = state.workflowValues[activeWorkflowId] || {}
-    const blockValues = (workflowValues as any)[blockId] || {}
-    return dependsOn.map((depKey) => (blockValues as any)[depKey] ?? null)
-  }) as any[]
+  const dependencyValues = useSubBlockStore(
+    useShallow((state) => {
+      if (dependsOn.length === 0) return [] as any[]
+      if (!activeWorkflowId) return dependsOn.map(() => null)
+      const workflowValues = state.workflowValues[activeWorkflowId] || {}
+      const blockValues = (workflowValues as any)[blockId] || {}
+      return dependsOn.map((depKey) => (blockValues as any)[depKey] ?? null)
+    })
+  ) as any[]
 
   const depsSatisfied = useMemo(() => {
     if (dependsOn.length === 0) return true
