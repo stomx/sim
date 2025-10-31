@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, Code, Info, RectangleHorizontal, RectangleVertical, Zap } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { Handle, type NodeProps, Position, useUpdateNodeInternals } from 'reactflow'
+import { useShallow } from 'zustand/react/shallow'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -87,14 +88,11 @@ export const WorkflowBlock = memo(
 
     // Optimized: Single diff store subscription for all diff-related data
     const { diffAnalysis, isShowingDiff, fieldDiff } = useWorkflowDiffStore(
-      useCallback(
-        (state) => ({
-          diffAnalysis: state.diffAnalysis,
-          isShowingDiff: state.isShowingDiff,
-          fieldDiff: currentWorkflow.isDiffMode ? state.diffAnalysis?.field_diffs?.[id] : undefined,
-        }),
-        [id, currentWorkflow.isDiffMode]
-      )
+      useShallow((state) => ({
+        diffAnalysis: state.diffAnalysis,
+        isShowingDiff: state.isShowingDiff,
+        fieldDiff: currentWorkflow.isDiffMode ? state.diffAnalysis?.field_diffs?.[id] : undefined,
+      }))
     )
     const isDeletedBlock = !isShowingDiff && diffAnalysis?.deleted_blocks?.includes(id)
 
@@ -108,20 +106,17 @@ export const WorkflowBlock = memo(
       storeBlockAdvancedMode,
       storeBlockTriggerMode,
     } = useWorkflowStore(
-      useCallback(
-        (state) => {
-          const block = state.blocks[id]
-          return {
-            storeHorizontalHandles: block?.horizontalHandles ?? true,
-            storeIsWide: block?.isWide ?? false,
-            storeBlockHeight: block?.height ?? 0,
-            storeBlockLayout: block?.layout,
-            storeBlockAdvancedMode: block?.advancedMode ?? false,
-            storeBlockTriggerMode: block?.triggerMode ?? false,
-          }
-        },
-        [id]
-      )
+      useShallow((state) => {
+        const block = state.blocks[id]
+        return {
+          storeHorizontalHandles: block?.horizontalHandles ?? true,
+          storeIsWide: block?.isWide ?? false,
+          storeBlockHeight: block?.height ?? 0,
+          storeBlockLayout: block?.layout,
+          storeBlockAdvancedMode: block?.advancedMode ?? false,
+          storeBlockTriggerMode: block?.triggerMode ?? false,
+        }
+      })
     )
 
     // Get block properties from currentWorkflow when in diff mode, otherwise from workflow store
@@ -148,13 +143,10 @@ export const WorkflowBlock = memo(
 
     // Optimized: Single SubBlockStore subscription for webhook info
     const blockWebhookStatus = useSubBlockStore(
-      useCallback(
-        (state) => {
-          const blockValues = state.workflowValues[activeWorkflowId || '']?.[id]
-          return !!(blockValues?.webhookProvider && blockValues?.webhookPath)
-        },
-        [activeWorkflowId, id]
-      )
+      useShallow((state) => {
+        const blockValues = state.workflowValues[activeWorkflowId || '']?.[id]
+        return !!(blockValues?.webhookProvider && blockValues?.webhookPath)
+      })
     )
 
     const blockAdvancedMode = currentWorkflow.isDiffMode
@@ -424,13 +416,10 @@ export const WorkflowBlock = memo(
 
     // Subscribe to this block's subblock values to track changes for conditional rendering
     const blockSubBlockValues = useSubBlockStore(
-      useCallback(
-        (state) => {
-          if (!activeWorkflowId) return {}
-          return state.workflowValues[activeWorkflowId]?.[id] || {}
-        },
-        [activeWorkflowId, id]
-      )
+      useShallow((state) => {
+        if (!activeWorkflowId) return {}
+        return state.workflowValues[activeWorkflowId]?.[id] || {}
+      })
     )
 
     const getSubBlockStableKey = useCallback(

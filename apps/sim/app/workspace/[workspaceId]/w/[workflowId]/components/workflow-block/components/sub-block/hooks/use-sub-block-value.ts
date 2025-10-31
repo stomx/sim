@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { isEqual } from 'lodash'
+import { useShallow } from 'zustand/react/shallow'
 import { createLogger } from '@/lib/logs/console/logger'
 import { useCollaborativeWorkflow } from '@/hooks/use-collaborative-workflow'
 import { getProviderFromModel } from '@/providers/utils'
@@ -41,14 +42,11 @@ export function useSubBlockValue<T = any>(
   const activeWorkflowId = useWorkflowRegistry((s) => s.activeWorkflowId)
 
   const blockType = useWorkflowStore(
-    useCallback((state) => state.blocks?.[blockId]?.type, [blockId])
+    useShallow((state) => state.blocks?.[blockId]?.type)
   )
 
   const initialValue = useWorkflowStore(
-    useCallback(
-      (state) => state.blocks?.[blockId]?.subBlocks?.[subBlockId]?.value ?? null,
-      [blockId, subBlockId]
-    )
+    useShallow((state) => state.blocks?.[blockId]?.subBlocks?.[subBlockId]?.value ?? null)
   )
 
   // Keep a ref to the latest value to prevent unnecessary re-renders
@@ -62,14 +60,11 @@ export function useSubBlockValue<T = any>(
   // Get value from subblock store, keyed by active workflow id
   // Optimized: use shallow equality comparison to prevent re-renders when other fields change
   const storeValue = useSubBlockStore(
-    useCallback(
-      (state) => {
-        // If the active workflow ID isn't available yet, return undefined so we can fall back to initialValue
-        if (!activeWorkflowId) return undefined
-        return state.workflowValues[activeWorkflowId]?.[blockId]?.[subBlockId] ?? null
-      },
-      [activeWorkflowId, blockId, subBlockId]
-    ),
+    useShallow((state) => {
+      // If the active workflow ID isn't available yet, return undefined so we can fall back to initialValue
+      if (!activeWorkflowId) return undefined
+      return state.workflowValues[activeWorkflowId]?.[blockId]?.[subBlockId] ?? null
+    }),
     (a, b) => isEqual(a, b) // Use deep equality to prevent re-renders for same values
   )
 
@@ -87,7 +82,7 @@ export function useSubBlockValue<T = any>(
   // Always call this hook unconditionally - don't wrap it in a condition
   // Optimized: only re-render if model value actually changes
   const modelSubBlockValue = useSubBlockStore(
-    useCallback((state) => (blockId ? state.getValue(blockId, 'model') : null), [blockId]),
+    useShallow((state) => (blockId ? state.getValue(blockId, 'model') : null)),
     (a, b) => a === b
   )
 

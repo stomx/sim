@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
+import { useShallow } from 'zustand/react/shallow'
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -259,10 +260,16 @@ export function ControlBar({ hasValidationErrors = false }: ControlBarProps) {
   }, [activeWorkflowId, isDeployed, setNeedsRedeploymentFlag, isRegistryLoading])
 
   // Get current store state for change detection
-  const currentBlocks = useWorkflowStore((state) => state.blocks)
-  const currentEdges = useWorkflowStore((state) => state.edges)
-  const subBlockValues = useSubBlockStore((state) =>
-    activeWorkflowId ? state.workflowValues[activeWorkflowId] : null
+  const currentBlocks = useWorkflowStore(
+    useShallow((state) => state.blocks)
+  )
+  const currentEdges = useWorkflowStore(
+    useShallow((state) => state.edges)
+  )
+  const subBlockValues = useSubBlockStore(
+    useShallow((state) =>
+      activeWorkflowId ? state.workflowValues[activeWorkflowId] : null
+    )
   )
 
   useEffect(() => {

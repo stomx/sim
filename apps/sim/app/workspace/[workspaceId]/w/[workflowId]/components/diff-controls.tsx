@@ -1,5 +1,6 @@
 import { memo, useCallback } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
+import { useShallow } from 'zustand/react/shallow'
 import { Button } from '@/components/ui/button'
 import { createLogger } from '@/lib/logs/console/logger'
 import { useCopilotStore } from '@/stores/copilot/store'
@@ -14,34 +15,28 @@ export const DiffControls = memo(function DiffControls() {
   // Optimized: Single diff store subscription
   const { isShowingDiff, isDiffReady, diffWorkflow, toggleDiffView, acceptChanges, rejectChanges } =
     useWorkflowDiffStore(
-      useCallback(
-        (state) => ({
-          isShowingDiff: state.isShowingDiff,
-          isDiffReady: state.isDiffReady,
-          diffWorkflow: state.diffWorkflow,
-          toggleDiffView: state.toggleDiffView,
-          acceptChanges: state.acceptChanges,
-          rejectChanges: state.rejectChanges,
-        }),
-        []
-      )
+      useShallow((state) => ({
+        isShowingDiff: state.isShowingDiff,
+        isDiffReady: state.isDiffReady,
+        diffWorkflow: state.diffWorkflow,
+        toggleDiffView: state.toggleDiffView,
+        acceptChanges: state.acceptChanges,
+        rejectChanges: state.rejectChanges,
+      }))
     )
 
   // Optimized: Single copilot store subscription for needed values
   const { updatePreviewToolCallState, clearPreviewYaml, currentChat, messages } = useCopilotStore(
-    useCallback(
-      (state) => ({
-        updatePreviewToolCallState: state.updatePreviewToolCallState,
-        clearPreviewYaml: state.clearPreviewYaml,
-        currentChat: state.currentChat,
-        messages: state.messages,
-      }),
-      []
-    )
+    useShallow((state) => ({
+      updatePreviewToolCallState: state.updatePreviewToolCallState,
+      clearPreviewYaml: state.clearPreviewYaml,
+      currentChat: state.currentChat,
+      messages: state.messages,
+    }))
   )
 
   const { activeWorkflowId } = useWorkflowRegistry(
-    useCallback((state) => ({ activeWorkflowId: state.activeWorkflowId }), [])
+    useShallow((state) => ({ activeWorkflowId: state.activeWorkflowId }))
   )
 
   const handleToggleDiff = useCallback(() => {

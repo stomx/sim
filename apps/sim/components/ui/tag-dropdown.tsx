@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
-import { shallow } from 'zustand/shallow'
+import { useShallow } from 'zustand/react/shallow'
 import { extractFieldsFromSchema, parseResponseFormatSafely } from '@/lib/response-format'
 import { cn } from '@/lib/utils'
 import { getBlockOutputPaths, getBlockOutputType } from '@/lib/workflows/block-outputs'
@@ -304,13 +304,12 @@ export const TagDropdown: React.FC<TagDropdownProps> = ({
   const [submenuHovered, setSubmenuHovered] = useState(false)
 
   const { blocks, edges, loops, parallels } = useWorkflowStore(
-    (state) => ({
+    useShallow((state) => ({
       blocks: state.blocks,
       edges: state.edges,
       loops: state.loops || {},
       parallels: state.parallels || {},
-    }),
-    shallow
+    }))
   )
 
   const workflowId = useWorkflowRegistry((state) => state.activeWorkflowId)

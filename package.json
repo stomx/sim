@@ -35,6 +35,8 @@
   },
   "dependencies": {
     "@linear/sdk": "40.0.0",
+    "@opentelemetry/sdk-trace-base": "2.2.0",
+    "@opentelemetry/sdk-trace-node": "2.2.0",
     "@t3-oss/env-nextjs": "0.13.4",
     "cronstrue": "3.3.0",
     "drizzle-orm": "^0.44.5",
