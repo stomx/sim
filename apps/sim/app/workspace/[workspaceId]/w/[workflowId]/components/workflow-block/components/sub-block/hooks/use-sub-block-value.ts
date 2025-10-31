@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { isEqual } from 'lodash'
 import { useShallow } from 'zustand/react/shallow'
 import { createLogger } from '@/lib/logs/console/logger'

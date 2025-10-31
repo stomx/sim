@@ -260,16 +260,10 @@ export function ControlBar({ hasValidationErrors = false }: ControlBarProps) {
   }, [activeWorkflowId, isDeployed, setNeedsRedeploymentFlag, isRegistryLoading])
 
   // Get current store state for change detection
-  const currentBlocks = useWorkflowStore(
-    useShallow((state) => state.blocks)
-  )
-  const currentEdges = useWorkflowStore(
-    useShallow((state) => state.edges)
-  )
+  const currentBlocks = useWorkflowStore(useShallow((state) => state.blocks))
+  const currentEdges = useWorkflowStore(useShallow((state) => state.edges))
   const subBlockValues = useSubBlockStore(
-    useShallow((state) =>
-      activeWorkflowId ? state.workflowValues[activeWorkflowId] : null
-    )
+    useShallow((state) => (activeWorkflowId ? state.workflowValues[activeWorkflowId] : null))
   )
 
   useEffect(() => {
